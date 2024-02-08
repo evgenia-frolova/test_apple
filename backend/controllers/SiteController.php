@@ -64,7 +64,16 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $model = new Apple;
+        
+        if ($model->load(Yii::$app->request->post())){
+            $model->created_at = new Expression('NOW()');
+            $model->save();
+        }
+        
+        return $this->render('apple', [
+            'model' => $model,
+        ]);
     }
 
     /**
