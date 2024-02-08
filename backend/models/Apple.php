@@ -1,9 +1,10 @@
 <?php
 
-namespace app\models;
+namespace backend\models;
 
 use Yii;
 use yii\db\Expression;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "apple".
@@ -15,7 +16,7 @@ use yii\db\Expression;
  * @property string $created_at
  * @property string|null $fall_at
  */
-class Apple extends \yii\db\ActiveRecord
+class Apple extends ActiveRecord
 {
     const STATUS_ON_TREE = 1; //на дереве
     const STATUS_FALL = 2; //упало
@@ -79,21 +80,30 @@ class Apple extends \yii\db\ActiveRecord
     {
         //яблоко можно съесть только если оно упало и не сгнило
         if (self::STATUS_FALL){
-            
             //Здесь проверяем сгнило ли яблоко. Если сгнило,
             //то поставить статус 3 и вернуть сообщение, что яблоко сгнило и есть его нельзя.
-            //яблоко сгнило если лежит >= 5 часов. Нужно проверить текущее время со временем падения яблока.
-            //
+            //яблоко сгнило если лежит >= 5 часов. Нужно сравнить текущее время со временем падения яблока.
+            $nowTime = date('Y-m-d H:i:s');
+            $fallTime = $this->fall_at; 
+            $interval = (int)((strtotime($nowTime) - strtotime($this->fall_at))/3600);
+            
+            if ($interval >= 5) {
+                $this->status = self::STATUS_ROT;
+                if ($this->save) {
+                    return 'Яблоко сгнило. Съесть нельзя';
+                }
+            }
             
             $this->balance = $this->balance - $percent;
             
             //удалить, если съедено полностью
-            if($this->balance == 0 && $this->delete()) {
+            if($this->balance <= 0 && $this->delete()) {
                 return 'Яблоко съедено полностью';
             }
             
             if(!$this->save())
                 return false;
+            
         } elseif (self::STATUS_ON_TREE){
             return 'Яблоко на дереве съесть нельзя';
         } else {
