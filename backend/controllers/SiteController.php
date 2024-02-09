@@ -30,7 +30,7 @@ class SiteController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index'],
+                        'actions' => ['logout', 'index', 'fall', 'eat'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -67,14 +67,46 @@ class SiteController extends Controller
         $model = new Apple;
         
         if ($model->load(Yii::$app->request->post())){
+            
+            if ($model->color !== 'green' && $model->color !== 'red') {
+                Yii::$app->session->setFlash('success', 'Поле цвет должно принимать значение green или red');
+            }
+            
             $model->created_at = new Expression('NOW()');
             $model->save();
         }
         
+        $appleArray = Apple::find()->all();
+        
         return $this->render('apple', [
             'model' => $model,
+            'appleArray' => $appleArray,
         ]);
     }
+    
+    public function actionFall()
+    {
+        $idApple = (int)Yii::$app->getRequest()->getQueryParam('id');
+        
+        if (Apple::find()->where(['id' => $idApple])->one()->fall()){
+            return $this->goBack(); 
+        }
+    }   
+    
+    public function actionEat()
+    {
+        if (!Yii::$app->request->post()) 
+            return 'Произошла ошибка!';
+            
+            
+        $idApple = (int)Yii::$app->request->post('id');
+        $percent = (int)Yii::$app->request->post('balance');
+        
+        if ($message = Apple::find()->where(['id' => $idApple])->one()->eat($percent)) {
+            Yii::$app->session->setFlash('success', $message);
+            return $this->goBack(); 
+        }
+    } 
 
     /**
      * Login action.

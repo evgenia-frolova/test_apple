@@ -22,6 +22,13 @@ class Apple extends ActiveRecord
     const STATUS_FALL = 2; //упало
     const STATUS_ROT= 3; //сгнило
     
+    const STATUS_ON_TREE_TEXT = 'висит на дереве';
+    const STATUS_FALL_TEXT = 'упало';
+    const STATUS_ROT_TEXT= 'сгнило';
+    
+    const COLOR_GREEN = 'зеленое';
+    const COLOR_RED = 'красное';
+     
     /**
      * {@inheritdoc}
      */
@@ -89,7 +96,7 @@ class Apple extends ActiveRecord
             
             if ($interval >= 5) {
                 $this->status = self::STATUS_ROT;
-                if ($this->save) {
+                if ($this->save()) {
                     return 'Яблоко сгнило. Съесть нельзя';
                 }
             }
@@ -98,18 +105,18 @@ class Apple extends ActiveRecord
             
             //удалить, если съедено полностью
             if($this->balance <= 0 && $this->delete()) {
-                return 'Яблоко съедено полностью';
+                return 'Яблоко съедено полностью. Удалить.';
             }
             
-            if(!$this->save())
-                return false;
+            if($this->save())
+                return 'Яблоко съедено на '.$percent.'%';
             
         } elseif (self::STATUS_ON_TREE){
             return 'Яблоко на дереве съесть нельзя';
         } else {
             return 'Яблоко сгнило. Съесть нельзя';
         }
-            
-        return true;
+        
+        return false;
     }        
 }
